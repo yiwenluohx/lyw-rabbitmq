@@ -1,6 +1,8 @@
 package com.study.bmq.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Correlation;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,4 +32,13 @@ public class SendMsgController {
         rabbitTemplate.convertAndSend("X", "XB", "消息来自 ttl 为 40S 的队列: " + message);
     }
 
+    @GetMapping("/sendExpirationMsg/{message}/{ttlTime}")
+    public void sendMsg(@PathVariable String message, @PathVariable String ttlTime) {
+        log.info("当前时间:{},发送一条时长{}毫秒 TTL 信息给队列 C:{}", new Date(), ttlTime, message);
+        rabbitTemplate.convertAndSend("X", "XC", message, (msg) -> {
+            //发送消息时，延时时长
+            msg.getMessageProperties().setExpiration(ttlTime);
+            return msg;
+        });
+    }
 }

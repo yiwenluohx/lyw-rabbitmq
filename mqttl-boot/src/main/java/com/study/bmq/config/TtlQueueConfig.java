@@ -21,8 +21,30 @@ public class TtlQueueConfig {
     public static final String Y_DEAD_LETTER_EXCHANGE = "Y";
     public static final String DEAD_LETTER_QUEUE = "QD";
 
+    public static final String QUEUE_C = "QC";
+
+    //声明队列 C 死信交换机
+    @Bean("queueC")
+    public Queue queueC() {
+        Map<String, Object> args = new HashMap<>(3);
+        //声明当前队列绑定的死信交换机
+        args.put("x-dead-letter-exchange", Y_DEAD_LETTER_EXCHANGE);
+        //声明当前队列的死信路由 key
+        args.put("x-dead-letter-routing-key", "YD");
+        //没有声明 TTL 属性
+        return QueueBuilder.durable(QUEUE_C).withArguments(args).build();
+    }
+
+    //声明队列 C 绑定 X 交换机
+    @Bean
+    public Binding queuecBindingX(@Qualifier("queueC") Queue queueC,
+                                  @Qualifier("xExchange") DirectExchange xExchange) {
+        return BindingBuilder.bind(queueC).to(xExchange).with("XC");
+    }
+
     /**
      * 声明 xExchange
+     *
      * @return
      */
     @Bean("xExchange")
@@ -32,6 +54,7 @@ public class TtlQueueConfig {
 
     /**
      * 声明 xExchange
+     *
      * @return
      */
     @Bean("yExchange")
@@ -41,6 +64,7 @@ public class TtlQueueConfig {
 
     /**
      * 声明队列 A ttl 为 10s 并绑定到对应的死信交换机
+     *
      * @return
      */
     @Bean("queueA")
@@ -57,6 +81,7 @@ public class TtlQueueConfig {
 
     /**
      * 声明队列 A绑定 X交换机
+     *
      * @param queueA
      * @param xExchange
      * @return
@@ -69,6 +94,7 @@ public class TtlQueueConfig {
 
     /**
      * 声明队列 B ttl 为 40s 并绑定到对应的死信交换机
+     *
      * @return
      */
     @Bean("queueB")
@@ -85,6 +111,7 @@ public class TtlQueueConfig {
 
     /**
      * 声明队列 B 绑定 X 交换机
+     *
      * @param queue1B
      * @param xExchange
      * @return
@@ -97,6 +124,7 @@ public class TtlQueueConfig {
 
     /**
      * 声明死信队列 QD
+     *
      * @return
      */
     @Bean("queueD")
@@ -106,6 +134,7 @@ public class TtlQueueConfig {
 
     /**
      * 声明死信队列 QD 绑定关系
+     *
      * @param queueD
      * @param yExchange
      * @return
