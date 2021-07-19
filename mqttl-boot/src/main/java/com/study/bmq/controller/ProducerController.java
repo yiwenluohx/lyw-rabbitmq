@@ -25,22 +25,18 @@ public class ProducerController {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-//    @Autowired
-//    private MyCallBack myCallBack;
-
-    //依赖注入 rabbitTemplate 之后再设置它的回调对象
-//    @PostConstruct
-//    public void init() {
-//        rabbitTemplate.setConfirmCallback(myCallBack);
-//    }
-
     @GetMapping("/sendMessage/{message}")
     public void sendMessage(@PathVariable String message) {
         //指定消息 id 为 1
-//        CorrelationData correlationData1 = new CorrelationData("1");
+        CorrelationData correlationData1 = new CorrelationData("1");
         String routingKey = "key1";
-        rabbitTemplate.convertAndSend(ConfirmConfig.CONFIRM_EXCHANGE_NAME, routingKey, message);
+        rabbitTemplate.convertAndSend(ConfirmConfig.CONFIRM_EXCHANGE_NAME, routingKey, message, correlationData1);
         log.info("发送消息内容:{}", message);
+        CorrelationData correlationData2 = new CorrelationData("2");
+        routingKey = "key2";
+        rabbitTemplate.convertAndSend(ConfirmConfig.CONFIRM_EXCHANGE_NAME, routingKey, message + routingKey, correlationData2);
+        log.info("发送消息内容:{}", message);
+
     }
 
 }
