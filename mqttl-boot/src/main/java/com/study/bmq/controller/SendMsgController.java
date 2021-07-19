@@ -1,8 +1,6 @@
 package com.study.bmq.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.Correlation;
-import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +23,9 @@ public class SendMsgController {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    public static final String DELAYED_EXCHANGE_NAME = "delayed.exchange";
+    public static final String DELAYED_ROUTING_KEY = "delayed.routingkey";
+
     @GetMapping("sendMsg/{message}")
     public void sendMsg(@PathVariable String message) {
         log.info("当前时间:{},发送一条信息给两个 TTL 队列:{}", new Date(), message);
@@ -40,5 +41,21 @@ public class SendMsgController {
             msg.getMessageProperties().setExpiration(ttlTime);
             return msg;
         });
+    }
+
+    /**
+     * 延迟插件发送消息
+     *
+     * @param message
+     * @param delayTime
+     */
+    @GetMapping("/sendDelayMsg/{message}/{delayTime}")
+    public void sendMsg(@PathVariable String message, @PathVariable Integer delayTime) {
+        log.info("当前时间:{},发送一条延迟 {}毫秒的信息给队列 delayed.queue:{}", new Date(), delayTime, message);
+        rabbitTemplate.convertAndSend(DELAYED_EXCHANGE_NAME, DELAYED_ROUTING_KEY, message,
+                correlationData -> {
+                    correlationData.getMessageProperties().setDelay(delayTime);
+                    return correlationData;
+                });
     }
 }
